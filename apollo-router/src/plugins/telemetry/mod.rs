@@ -399,12 +399,6 @@ impl Plugin for Telemetry {
         let name = name.to_owned();
         ServiceBuilder::new()
             .instrument(move |req: &SubgraphRequest| {
-                let query = req
-                    .subgraph_request
-                    .body()
-                    .query
-                    .clone()
-                    .unwrap_or_default();
                 let operation_name = req
                     .subgraph_request
                     .body()
@@ -415,7 +409,6 @@ impl Plugin for Telemetry {
                 info_span!(
                     SUBGRAPH_SPAN_NAME,
                     "apollo.subgraph.name" = name.as_str(),
-                    graphql.document = query.as_str(),
                     graphql.operation.name = operation_name.as_str(),
                     "otel.kind" = "INTERNAL",
                     "apollo_private.ftv1" = field::Empty
@@ -642,7 +635,6 @@ impl Telemetry {
     ) -> impl Fn(&SupergraphRequest) -> Span + Clone {
         move |request: &SupergraphRequest| {
             let http_request = &request.supergraph_request;
-            let query = http_request.body().query.clone().unwrap_or_default();
             let operation_name = http_request
                 .body()
                 .operation_name
@@ -651,7 +643,6 @@ impl Telemetry {
 
             let span = info_span!(
                 SUPERGRAPH_SPAN_NAME,
-                graphql.document = query.as_str(),
                 // TODO add graphql.operation.type
                 graphql.operation.name = operation_name.as_str(),
                 otel.kind = "INTERNAL",

@@ -33,7 +33,7 @@ impl TraceId {
     }
 
     /// Get the current trace id if it's a valid one, even if it's not sampled
-    pub(crate) fn current() -> Option<Self> {
+    pub fn current() -> Option<Self> {
         let trace_id = Span::current()
             .with_subscriber(move |(id, dispatch)| {
                 if let Some(reg) = dispatch.downcast_ref::<Registry>() {

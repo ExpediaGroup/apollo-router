@@ -806,7 +806,7 @@ fn http_response_to_graphql_response(
 }
 
 /// Process a single subgraph batch request
-#[instrument(skip(level="trace", client_factory, contexts, request))]
+#[instrument(level="trace", skip(client_factory, contexts, request))]
 pub(crate) async fn process_batch(
     client_factory: HttpClientServiceFactory,
     service: String,

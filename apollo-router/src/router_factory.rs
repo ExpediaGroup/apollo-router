@@ -150,7 +150,7 @@ pub(crate) struct YamlRouterFactory;
 impl Drop for YamlRouterFactory {
   fn drop(&mut self) {
     tracing::info!(
-      "dropping YamlRouterFactor"
+      "dropping YamlRouterFactory"
     );
   }
 }

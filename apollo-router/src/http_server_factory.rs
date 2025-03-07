@@ -185,12 +185,6 @@ impl HttpServerHandle {
     }
 }
 
-impl Drop for HttpServerHandle {
-  fn drop(&mut self) {
-    tracing::info!("dropping HttpServerHandle");
-  }
-}
-
 pub(crate) enum Listener {
     Tcp(tokio::net::TcpListener),
     #[cfg(unix)]

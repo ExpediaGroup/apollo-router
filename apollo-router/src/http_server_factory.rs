@@ -137,7 +137,7 @@ impl HttpServerHandle {
         // the listeners instead of dropping them
         let (main_listener, extra_listeners) = self.wait_for_servers().await?;
 
-        tracing::debug!("previous server stopped");
+        tracing::info!("previous server stopped");
 
         // we give the listeners to the new configuration, they'll clean up whatever needs to
         let handle = factory
@@ -151,7 +151,7 @@ impl HttpServerHandle {
                 all_connections_stopped_sender,
             )
             .await?;
-        tracing::debug!(
+        tracing::info!(
             "restarted on {}",
             handle
                 .listen_addresses()
@@ -183,6 +183,12 @@ impl HttpServerHandle {
         let extra_listeners = self.extra_futures.await?;
         Ok((main_listener, extra_listeners))
     }
+}
+
+impl Drop for HttpServerHandle {
+  fn drop(&mut self) {
+    tracing::info!("dropping HttpServerHandle");
+  }
 }
 
 pub(crate) enum Listener {

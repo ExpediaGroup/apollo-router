@@ -442,11 +442,6 @@ impl HttpServerFactory for AxumHttpServerFactory {
     }
 }
 
-impl Drop for AxumHttpServerFactory {
-  fn drop(&mut self) {
-    tracing::info!("dropping AxumHttpServerFactory");
-  }
-}
 // This function can be removed once https://github.com/apollographql/router/issues/4083 is done.
 pub(crate) fn span_mode(configuration: &Configuration) -> SpanMode {
     configuration

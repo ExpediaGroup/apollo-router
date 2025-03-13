@@ -137,6 +137,14 @@ pub(crate) trait RouterSuperServiceFactory: Send + Sync + 'static {
 #[derive(Default)]
 pub(crate) struct YamlRouterFactory;
 
+impl Drop for YamlRouterFactory {
+  fn drop(&mut self) {
+    tracing::info!(
+       "dropping YamlRouterFactory"
+     );
+  }
+}
+
 #[async_trait::async_trait]
 impl RouterSuperServiceFactory for YamlRouterFactory {
     type RouterFactory = RouterCreator;

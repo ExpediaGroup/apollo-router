@@ -32,6 +32,8 @@ mod tests;
 pub type BoxService = tower::util::BoxService<Request, Response, BoxError>;
 pub type BoxCloneService = tower::util::BoxCloneService<Request, Response, BoxError>;
 pub type ServiceResult = Result<Response, BoxError>;
+/// The key to know if supergraph request was an instrospection query
+pub const IS_INTROSPECTION_QUERY: &str = "apollo::supergraph::is_introspection_query";
 
 assert_impl_all!(Request: Send);
 /// Represents the router processing step of the processing pipeline.

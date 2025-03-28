@@ -74,6 +74,8 @@ pub(crate) const OPERATION_KIND: &str = "apollo::supergraph::operation_kind";
 pub(crate) const DEPRECATED_OPERATION_KIND: &str = "operation_kind";
 /// The key to know if the response body contains at least 1 GraphQL error
 pub(crate) const CONTAINS_GRAPHQL_ERROR: &str = "apollo::telemetry::contains_graphql_error";
+/// The key to know if supergraph request was an instrospection query
+pub const IS_INTROSPECTION_QUERY: &str = "apollo::supergraph::is_introspection_query";
 
 /// Holds [`Context`] entries.
 pub(crate) type Entries = Arc<DashMap<String, Value>>;

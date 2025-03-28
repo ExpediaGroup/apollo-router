@@ -32,7 +32,7 @@ use crate::apollo_studio_interop::UsageReporting;
 use crate::batching::BatchQuery;
 use crate::configuration::Batching;
 use crate::configuration::PersistedQueriesPrewarmQueryPlanCache;
-use crate::context::OPERATION_NAME;
+use crate::context::{IS_INTROSPECTION_QUERY, OPERATION_NAME};
 use crate::error::CacheResolverError;
 use crate::graphql;
 use crate::graphql::IntoGraphQLErrors;
@@ -247,10 +247,17 @@ async fn service_call(
     }
 
     match content {
-        Some(QueryPlannerContent::Response { response })
-        | Some(QueryPlannerContent::CachedIntrospectionResponse { response }) => Ok(
-            SupergraphResponse::new_from_graphql_response(*response, context),
+        Some(QueryPlannerContent::Response { response }) => Ok(
+            SupergraphResponse::new_from_graphql_response(*response, context)
         ),
+        Some(QueryPlannerContent::CachedIntrospectionResponse { response }) => {
+          context
+            .insert(IS_INTROSPECTION_QUERY, "1")
+            .expect("cannot insert is introspection query into context; this is a bug");
+          Ok(
+              SupergraphResponse::new_from_graphql_response(*response, context),
+          )
+        },
         Some(QueryPlannerContent::IntrospectionDisabled) => {
             let mut response = SupergraphResponse::new_from_graphql_response(
                 graphql::Response::builder()

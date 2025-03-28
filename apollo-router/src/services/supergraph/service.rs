@@ -83,6 +83,7 @@ use crate::services::router::ClientRequestAccepts;
 use crate::services::subgraph::BoxGqlStream;
 use crate::services::subgraph_service::MakeSubgraphService;
 use crate::services::supergraph;
+use crate::services::supergraph::IS_INTROSPECTION_QUERY;
 use crate::spec::Schema;
 use crate::spec::operation_limits::OperationLimits;
 
@@ -231,10 +232,17 @@ async fn service_call(
     }
 
     match content {
-        Some(QueryPlannerContent::Response { response })
-        | Some(QueryPlannerContent::CachedIntrospectionResponse { response }) => Ok(
-            SupergraphResponse::new_from_graphql_response(*response, context),
+        Some(QueryPlannerContent::Response { response }) => Ok(
+            SupergraphResponse::new_from_graphql_response(*response, context)
         ),
+        Some(QueryPlannerContent::CachedIntrospectionResponse { response }) => {
+          context
+            .insert(IS_INTROSPECTION_QUERY, true)
+            .expect("cannot insert is introspection query into context; this is a bug");
+          Ok(
+              SupergraphResponse::new_from_graphql_response(*response, context),
+          )
+        },
         Some(QueryPlannerContent::IntrospectionDisabled) => {
             let mut response = SupergraphResponse::new_from_graphql_response(
                 graphql::Response::builder()

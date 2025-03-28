@@ -32,7 +32,7 @@ use crate::apollo_studio_interop::UsageReporting;
 use crate::batching::BatchQuery;
 use crate::configuration::Batching;
 use crate::configuration::PersistedQueriesPrewarmQueryPlanCache;
-use crate::context::{IS_INTROSPECTION_QUERY, OPERATION_NAME};
+use crate::context::OPERATION_NAME;
 use crate::error::CacheResolverError;
 use crate::graphql;
 use crate::graphql::IntoGraphQLErrors;
@@ -89,6 +89,8 @@ use crate::uplink::license_enforcement::LicenseState;
 pub(crate) const FIRST_EVENT_CONTEXT_KEY: &str = "apollo::supergraph::first_event";
 pub(crate) const DEPRECATED_FIRST_EVENT_CONTEXT_KEY: &str =
     "apollo_router::supergraph::first_event";
+/// The key to know if supergraph request was an instrospection query
+pub const IS_INTROSPECTION_QUERY: &str = "apollo::supergraph::is_introspection_query";
 
 /// An [`IndexMap`] of available plugins.
 pub(crate) type Plugins = IndexMap<String, Box<dyn DynPlugin>>;

@@ -82,6 +82,7 @@ use crate::services::router::ClientRequestAccepts;
 use crate::services::subgraph::BoxGqlStream;
 use crate::services::subgraph_service::MakeSubgraphService;
 use crate::services::supergraph;
+use crate::services::supergraph::IS_INTROSPECTION_QUERY;
 use crate::spec::Schema;
 use crate::spec::operation_limits::OperationLimits;
 use crate::uplink::license_enforcement::LicenseState;

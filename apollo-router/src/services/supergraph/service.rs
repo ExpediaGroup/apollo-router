@@ -253,7 +253,7 @@ async fn service_call(
         ),
         Some(QueryPlannerContent::CachedIntrospectionResponse { response }) => {
           context
-            .insert(IS_INTROSPECTION_QUERY, "1")
+            .insert(IS_INTROSPECTION_QUERY, true)
             .expect("cannot insert is introspection query into context; this is a bug");
           Ok(
               SupergraphResponse::new_from_graphql_response(*response, context),

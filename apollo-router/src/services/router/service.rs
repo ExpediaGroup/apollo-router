@@ -242,7 +242,11 @@ impl Service<RouterRequest> for RouterService {
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, cx: &mut std::task::Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.supergraph_service.poll_ready(cx)
+        let ready = self.supergraph_service.poll_ready(cx);
+        if ready.is_pending() {
+            tracing::info!("router service poll not ready");
+        }
+        ready
     }
 
     fn call(&mut self, req: RouterRequest) -> Self::Future {

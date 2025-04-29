@@ -170,6 +170,7 @@ async fn apq_request(
                     path: Default::default(),
                     extensions: serde_json_bytes::from_value(json!({
                       "code": "PERSISTED_QUERY_NOT_FOUND",
+                      "operationName": request.supergraph_request.body_mut().operation_name.clone().unwrap_or("NO OPERATION NAME PROVIDED".to_string()),
                     }))
                     .unwrap(),
                 }];
@@ -269,6 +270,7 @@ mod apq_tests {
             path: Default::default(),
             extensions: serde_json_bytes::from_value(json!({
               "code": "PERSISTED_QUERY_NOT_FOUND",
+              "operationName": "testOperation",
             }))
             .unwrap(),
         };
@@ -305,6 +307,7 @@ mod apq_tests {
 
         let hash_only = SupergraphRequest::fake_builder()
             .extension("persistedQuery", persisted.clone())
+            .operation_name("testOperation".to_string())
             .context(new_context())
             .build()
             .expect("expecting valid request")
@@ -395,6 +398,7 @@ mod apq_tests {
             path: Default::default(),
             extensions: serde_json_bytes::from_value(json!({
               "code": "PERSISTED_QUERY_NOT_FOUND",
+              "operationName": "NO OPERATION NAME PROVIDED",
             }))
             .unwrap(),
         };

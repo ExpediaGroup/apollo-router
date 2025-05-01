@@ -6956,6 +6956,7 @@ dependencies = [
  "matchers",
  "nu-ansi-term 0.46.0",
  "once_cell",
+ "parking_lot",
  "regex",
  "serde",
  "serde_json",

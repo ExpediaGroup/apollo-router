@@ -13,7 +13,7 @@ use crate::error::FederationError;
 use crate::operation::DirectiveList;
 use crate::operation::SelectionSet;
 use crate::query_graph::QueryGraph;
-use crate::query_graph::graph_path::OpPathElement;
+use crate::query_graph::graph_path::operation::OpPathElement;
 use crate::query_plan::ConditionNode;
 use crate::query_plan::DeferNode;
 use crate::query_plan::DeferredDeferBlock;
@@ -457,7 +457,7 @@ fn flat_wrap_nodes(
     let mut iter = nodes.into_iter().flatten();
     let first = iter.next()?;
     let Some(second) = iter.next() else {
-        return Some(first.clone());
+        return Some(first);
     };
     let mut nodes = Vec::new();
     for node in [first, second].into_iter().chain(iter) {

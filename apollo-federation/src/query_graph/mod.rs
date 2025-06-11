@@ -40,14 +40,14 @@ pub mod output;
 pub(crate) mod path_tree;
 
 pub use build_query_graph::build_federated_query_graph;
+use graph_path::operation::OpGraphPathContext;
+use graph_path::operation::OpGraphPathTrigger;
+use graph_path::operation::OpPathElement;
 
 use crate::query_graph::condition_resolver::ConditionResolution;
 use crate::query_graph::condition_resolver::ConditionResolver;
 use crate::query_graph::graph_path::ExcludedConditions;
 use crate::query_graph::graph_path::ExcludedDestinations;
-use crate::query_graph::graph_path::OpGraphPathContext;
-use crate::query_graph::graph_path::OpGraphPathTrigger;
-use crate::query_graph::graph_path::OpPathElement;
 use crate::query_plan::QueryPlanCost;
 use crate::query_plan::query_planner::EnabledOverrideConditions;
 use crate::query_plan::query_planning_traversal::non_local_selections_estimation;
@@ -742,6 +742,7 @@ impl QueryGraph {
                     subgraph_schema,
                     composite_type_position.type_name().clone(),
                     key_value.fields,
+                    true,
                 )
             })
             .find_ok(|selection| !external_metadata.selects_any_external_field(selection))
@@ -979,7 +980,7 @@ impl QueryGraph {
                 key.specified_argument_by_name("fields")
                     .and_then(|arg| arg.as_str())
             })
-            .map(|value| parse_field_set(schema, ty.name().clone(), value))
+            .map(|value| parse_field_set(schema, ty.name().clone(), value, true))
             .find_ok(|selection| {
                 !metadata
                     .external_metadata()

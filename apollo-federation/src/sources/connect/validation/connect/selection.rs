@@ -28,6 +28,8 @@ use crate::sources::connect::json_selection::Ranged;
 use crate::sources::connect::spec::schema::CONNECT_SELECTION_ARGUMENT_NAME;
 use crate::sources::connect::validation::coordinates::ConnectDirectiveCoordinate;
 use crate::sources::connect::validation::coordinates::SelectionCoordinate;
+use crate::sources::connect::validation::expression::MappingArgument;
+use crate::sources::connect::validation::expression::parse_mapping_argument;
 use crate::sources::connect::validation::graphql::GraphQLString;
 use crate::sources::connect::validation::graphql::SchemaInfo;
 use crate::sources::connect::variable::Phase;
@@ -63,41 +65,18 @@ impl<'schema> Selection<'schema> {
                     .into_iter()
                     .collect(),
             })?;
-        let string =
-            GraphQLString::new(&selection_arg.value, &schema.sources).map_err(|_| Message {
-                code: Code::GraphQLError,
-                message: format!("{coordinate} must be a string."),
-                locations: selection_arg
-                    .line_column_range(&schema.sources)
-                    .into_iter()
-                    .collect(),
-            })?;
 
-        let parsed = JSONSelection::parse(string.as_str()).map_err(|err| Message {
-            code: Code::InvalidSelection,
-            message: format!("{coordinate} is not valid: {err}",),
-            locations: string
-                .line_col_for_subslice(err.offset..err.offset + 1, schema)
-                .into_iter()
-                .collect(),
-        })?;
-
-        if parsed.is_empty() {
-            return Err(Message {
-                code: Code::InvalidSelection,
-                message: format!("{coordinate} is empty",),
-                locations: selection_arg
-                    .value
-                    .line_column_range(&schema.sources)
-                    .into_iter()
-                    .collect(),
-            });
-        }
+        let MappingArgument { expression, string } = parse_mapping_argument(
+            &selection_arg.value,
+            coordinate,
+            Code::InvalidSelection,
+            schema,
+        )?;
 
         Ok(Self {
             string,
             coordinate,
-            parsed,
+            parsed: expression.expression,
         })
     }
 
@@ -201,12 +180,11 @@ pub(super) fn validate_selection_variables<'a>(
                     namespace = reference.namespace.namespace.as_str(),
                     available = context.namespaces_joined(),
                 ),
-                locations: selection_str
-                    .line_col_for_subslice(
-                        reference.namespace.location.start..reference.namespace.location.end,
-                        schema,
-                    )
-                    .into_iter()
+                locations: reference
+                    .namespace
+                    .location
+                    .iter()
+                    .flat_map(|range| selection_str.line_col_for_subslice(range.clone(), schema))
                     .collect(),
             });
         }
@@ -224,7 +202,7 @@ struct SelectionValidator<'schema> {
 }
 
 impl<'schema> SelectionValidator<'schema> {
-    fn new(
+    const fn new(
         schema: &'schema SchemaInfo<'schema>,
         root: PathPart<'schema>,
         string: GraphQLString<'schema>,
@@ -349,7 +327,7 @@ enum PathPart<'a> {
 }
 
 impl PathPart<'_> {
-    fn ty(&self) -> &Node<ObjectType> {
+    const fn ty(&self) -> &Node<ObjectType> {
         match self {
             PathPart::Root(ty) => ty,
             PathPart::Field { ty, .. } => ty,
@@ -394,14 +372,12 @@ impl<'schema> GroupVisitor<Group<'schema>, Field<'schema>> for SelectionValidato
     /// Get all the fields for an object type / selection.
     /// Returns an error if a selection points at a field which does not exist on the schema.
     fn enter_group(&mut self, group: &Group<'schema>) -> Result<Vec<Field<'schema>>, Self::Error> {
-        match group.definition {
-            Some(definition) => {
-                self.path.push(PathPart::Field {
-                    definition,
-                    ty: group.ty,
-                });
-            }
-            None => {} // this happens at the root of a connector on a type, and we've already added the root path part
+        // This is `None` at the root of a connector on a type, and we've already added the root path part
+        if let Some(definition) = group.definition {
+            self.path.push(PathPart::Field {
+                definition,
+                ty: group.ty,
+            });
         }
 
         group.selection.selections_iter().flat_map(|selection| {

@@ -48,12 +48,12 @@ use crate::operation::VariableCollector;
 use crate::query_graph::QueryGraph;
 use crate::query_graph::QueryGraphEdgeTransition;
 use crate::query_graph::QueryGraphNodeType;
-use crate::query_graph::graph_path::OpGraphPathContext;
-use crate::query_graph::graph_path::OpGraphPathTrigger;
-use crate::query_graph::graph_path::OpPath;
-use crate::query_graph::graph_path::OpPathElement;
-use crate::query_graph::graph_path::concat_op_paths;
-use crate::query_graph::graph_path::concat_paths_in_parents;
+use crate::query_graph::graph_path::operation::OpGraphPathContext;
+use crate::query_graph::graph_path::operation::OpGraphPathTrigger;
+use crate::query_graph::graph_path::operation::OpPath;
+use crate::query_graph::graph_path::operation::OpPathElement;
+use crate::query_graph::graph_path::operation::concat_op_paths;
+use crate::query_graph::graph_path::operation::concat_paths_in_parents;
 use crate::query_graph::path_tree::OpPathTree;
 use crate::query_graph::path_tree::PathTreeChild;
 use crate::query_plan::FetchDataPathElement;
@@ -915,7 +915,7 @@ impl FetchDependencyGraph {
             parent_node_id,
             child_id,
             Arc::new(FetchDependencyGraphEdge {
-                path: path_in_parent.clone(),
+                path: path_in_parent,
             }),
         );
     }
@@ -2922,7 +2922,8 @@ impl FetchDependencyGraphNode {
     }
 
     fn add_context_renamer(&mut self, renamer: FetchDataKeyRenamer) {
-        if !self.context_inputs.iter().any(|c| *c == renamer) {
+        // XXX(@goto-bus-stop): this looks like it should be an IndexSet!
+        if !self.context_inputs.contains(&renamer) {
             self.context_inputs.push(renamer);
         }
     }
@@ -3034,7 +3035,7 @@ fn operation_for_entities_fetch(
         .into());
     }
 
-    let entities = FieldDefinitionPosition::Object(query_type.field(ENTITIES_QUERY.clone()));
+    let entities = FieldDefinitionPosition::Object(query_type.field(ENTITIES_QUERY));
 
     let entities_call = Selection::from_element(
         OpPathElement::Field(Field {
@@ -4233,7 +4234,7 @@ fn wrap_selection_with_type_and_conditions<T>(
             InlineFragment {
                 schema: supergraph_schema.clone(),
                 parent_type_position: wrapping_type.clone(),
-                type_condition_position: Some(type_condition.clone()),
+                type_condition_position: Some(type_condition),
                 directives: Default::default(), // None
                 selection_id: SelectionId::new(),
             },
@@ -4461,7 +4462,7 @@ fn handle_conditions_tree(
                 };
                 let defer_ref = fetch_node.defer_ref.clone();
                 let copied_node_id =
-                    dependency_graph.new_key_node(&subgraph_name, merge_at, defer_ref.clone())?;
+                    dependency_graph.new_key_node(&subgraph_name, merge_at, defer_ref)?;
                 dependency_graph.add_parent(copied_node_id, parent.clone());
                 dependency_graph.copy_inputs(copied_node_id, fetch_node_id)?;
                 Some((copied_node_id, parent))
@@ -4738,7 +4739,7 @@ fn create_post_requires_node(
             // should already have a key in its inputs, so we don't need to add that).
             let inputs = inputs_for_require(
                 dependency_graph,
-                entity_type_position.clone(),
+                entity_type_position,
                 entity_type_schema,
                 query_graph_edge_id,
                 context,
@@ -4816,7 +4817,7 @@ fn create_post_requires_node(
         created_nodes.insert(post_requires_node_id);
         let initial_fetch_path = create_fetch_initial_path(
             &dependency_graph.supergraph_schema,
-            &entity_type_position.clone().into(),
+            &entity_type_position.into(),
             context,
         )?;
         let new_path = fetch_node_path.for_new_key_fetch(initial_fetch_path);
@@ -4874,7 +4875,7 @@ fn create_post_requires_node(
         created_nodes.insert(post_requires_node_id);
         let initial_fetch_path = create_fetch_initial_path(
             &dependency_graph.supergraph_schema,
-            &entity_type_position.clone().into(),
+            &entity_type_position.into(),
             context,
         )?;
         let new_path = fetch_node_path.for_new_key_fetch(initial_fetch_path);
@@ -5118,7 +5119,7 @@ mod tests {
         )
         .unwrap();
 
-        let valid_schema = ValidFederationSchema::new(schema.clone()).unwrap();
+        let valid_schema = ValidFederationSchema::new(schema).unwrap();
 
         let foo = object_field_element(&valid_schema, name!("Query"), name!("foo"));
         let frag = inline_fragment_element(&valid_schema, name!("Foo"), Some(name!("Foo_1")));
@@ -5180,7 +5181,7 @@ mod tests {
         )
         .unwrap();
 
-        let valid_schema = ValidFederationSchema::new(schema.clone()).unwrap();
+        let valid_schema = ValidFederationSchema::new(schema).unwrap();
 
         let foo = object_field_element(&valid_schema, name!("Query"), name!("foo"));
         let frag = inline_fragment_element(&valid_schema, name!("Foo"), Some(name!("Foo_1")));

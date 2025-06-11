@@ -8,12 +8,12 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use buildstructor::buildstructor;
-use fred::clients::RedisClient;
+use fred::clients::Client as RedisClient;
 use fred::interfaces::ClientLike;
 use fred::interfaces::KeysInterface;
-use fred::prelude::RedisConfig;
-use fred::types::ScanType;
-use fred::types::Scanner;
+use fred::prelude::Config as RedisConfig;
+use fred::types::scan::ScanType;
+use fred::types::scan::Scanner;
 use futures::StreamExt;
 use http::header::ACCEPT;
 use http::header::CONTENT_TYPE;
@@ -330,7 +330,15 @@ impl Telemetry {
         let headers: HashMap<String, String> = request
             .headers
             .iter()
-            .map(|(name, value)| (name.as_str().to_string(), value.as_str().to_string()))
+            .map(|(name, value)| {
+                (
+                    name.as_str().to_string(),
+                    value
+                        .to_str()
+                        .expect("non-UTF-8 header value in tests")
+                        .to_string(),
+                )
+            })
             .collect();
 
         match self {
@@ -428,8 +436,8 @@ impl IntegrationTest {
 
         // Allow for GET or POST so that connectors works
         let http_method = match http_method.unwrap_or("POST".to_string()).as_str() {
-            "GET" => Method::Get,
-            "POST" => Method::Post,
+            "GET" => Method::GET,
+            "POST" => Method::POST,
             _ => panic!("Unknown http method specified"),
         };
         let subgraph_context = Arc::new(Mutex::new(None));

@@ -15,6 +15,7 @@ use apollo_compiler::validation::Valid;
 use itertools::Itertools;
 
 use crate::link::federation_spec_definition::FEDERATION_FIELDS_ARGUMENT_NAME;
+use crate::sources::connect::Connector;
 use crate::sources::connect::Namespace;
 use crate::sources::connect::validation::Code;
 use crate::sources::connect::validation::Message;
@@ -56,13 +57,11 @@ impl<'schema> EntityKeyChecker<'schema> {
 
         for (key, directive, _) in &self.resolvable_keys {
             let for_type = self.entity_connectors.get(&key.selection_set.ty);
-            let key_exists = for_type
-                .map(|connectors| {
-                    connectors
-                        .iter()
-                        .any(|connector| field_set_is_subset(key, connector))
-                })
-                .unwrap_or(false);
+            let key_exists = for_type.is_some_and(|connectors| {
+                connectors
+                    .iter()
+                    .any(|connector| field_set_is_subset(key, connector))
+            });
             if !key_exists {
                 messages.push(Message {
                     code: Code::MissingEntityConnector,
@@ -121,16 +120,21 @@ impl fmt::Debug for EntityKeyChecker<'_> {
 
 pub(crate) fn field_set_error(
     variables: &[VariableReference<Namespace>],
-    type_name: &str,
+    connector: &Connector,
+    schema: &Schema,
 ) -> Message {
     Message {
-        code: Code::GraphQLError,
+        code: Code::ConnectorsCannotResolveKey,
         message: format!(
-            "Variables used in connector (`{}`) for `{}` cannot be used to create a valid `@key` directive.",
+            "Variables used in connector (`{}`) on type `{}` cannot be used to create a valid `@key` directive.",
             variables.iter().join("`, `"),
-            type_name
+            connector.id.directive.simple_name()
         ),
-        locations: vec![],
+        locations: connector
+            .name()
+            .line_column_range(&schema.sources)
+            .into_iter()
+            .collect(),
     }
 }
 

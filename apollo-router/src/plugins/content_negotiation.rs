@@ -29,6 +29,7 @@ use crate::services::router::body::RouterBody;
 register_plugin!("apollo", "content_negotiation", ContentNegotiation);
 
 const APPLICATION_JSON: &str = "application/json";
+const TEXT_HTML: &str = "text/html; charset=utf-8";
 pub(crate) const APPLICATION_GRAPHQL_JSON: &str = "application/graphql-response+json";
 
 const ORIGIN_HEADER_VALUE: HeaderValue = HeaderValue::from_static("origin");
@@ -141,7 +142,15 @@ impl ContentNegotiation {
             None if accepts_json || accepts_wildcard => HeaderValue::from_static(APPLICATION_JSON),
             _ => {
                 // XX(@carodewig) this should be unreachable, but provide fallback of APPLICATION_JSON
-                HeaderValue::from_static(APPLICATION_JSON)
+                if headers
+                    .get(ACCEPT)
+                    .and_then(|header| header.to_str().ok())
+                    .is_some_and(|s| s.contains("text/html"))
+                {
+                    HeaderValue::from_static(TEXT_HTML)
+                } else {
+                    HeaderValue::from_static(APPLICATION_JSON)
+                }
             }
         };
         headers.insert(CONTENT_TYPE, content_type);

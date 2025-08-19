@@ -11,11 +11,11 @@ pub(crate) use subgraph_context::build_operation_with_aliasing;
 pub use self::fetch::OperationKind;
 
 mod caching_query_planner;
-mod convert;
+pub mod convert;
 mod execution;
 pub(crate) mod fetch;
 mod labeler;
-mod plan;
+pub mod plan;
 pub(crate) mod query_planner_service;
 pub(crate) mod rewrites;
 pub(crate) mod selection;

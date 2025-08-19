@@ -6,7 +6,7 @@ use crate::query_planner::plan;
 use crate::query_planner::rewrites;
 use crate::query_planner::subscription;
 
-pub(crate) fn convert_root_query_plan_node(js: &next::QueryPlan) -> Option<plan::PlanNode> {
+pub fn convert_root_query_plan_node(js: &next::QueryPlan) -> Option<plan::PlanNode> {
     let next::QueryPlan {
         node,
         statistics: _,

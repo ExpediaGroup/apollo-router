@@ -651,13 +651,6 @@ async fn call_websocket(
             other_error => other_error.to_string(),
         };
 
-        tracing::debug!(
-            error.type   = "websocket_connection_failed",
-            error.details= %error_details,
-            error.source = %std::any::type_name_of_val(&err),
-            "WebSocket connection failed"
-        );
-
         FetchError::SubrequestWsError {
             service: service_name.clone(),
             reason: format!("cannot connect websocket to subgraph: {error_details}"),

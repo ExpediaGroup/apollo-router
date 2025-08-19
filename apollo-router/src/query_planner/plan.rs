@@ -104,7 +104,7 @@ impl QueryPlan {
 /// Query plans are composed of a set of nodes.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase", tag = "kind")]
-pub(crate) enum PlanNode {
+pub enum PlanNode {
     /// These nodes must be executed in order.
     Sequence {
         /// The plan nodes that make up the sequence execution.

@@ -169,6 +169,10 @@ impl QueryPlannerService {
                 .map(|n| Name::new(n).map_err(FederationError::from))
                 .transpose()
                 .and_then(|operation| {
+                    tracing::info!({
+                        message = "Building query plan",
+                        operation = format!("{}", operation.clone().unwrap_or(Name::new_static_unchecked("NO OPERATION NAME PROVIDED"))),
+                    });
                     rust_planner.build_query_plan(&doc.executable, operation, query_plan_options)
                 });
             if let Err(FederationError::SingleFederationError(

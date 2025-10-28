@@ -163,6 +163,13 @@ async fn apq_request(
             } else {
                 let _ = request.context.insert(PERSISTED_QUERY_CACHE_HIT, false);
                 tracing::trace!("apq: cache miss");
+
+                let operation_name = request.supergraph_request.body().operation_name
+                    .clone()
+                    .unwrap_or_else(|| "NO OPERATION NAME PROVIDED".to_string());
+                
+                tracing::info!(message = "PersistedQueryNotFound", operation = operation_name);
+                
                 let errors = vec![
                     crate::error::Error::builder()
                         .message("PersistedQueryNotFound".to_string())

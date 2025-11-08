@@ -29,6 +29,8 @@ pub struct Request {
     pub query_plan: Arc<QueryPlan>,
 
     pub context: Context,
+
+    pub request_context: Arc<Context>,
     /// Initial data coming from subscription event if it's a subscription
     pub(crate) source_stream_value: Option<Value>,
     /// Channel to send all parameters needed for the subscription
@@ -46,6 +48,7 @@ impl Request {
         supergraph_request: http::Request<graphql::Request>,
         query_plan: Arc<QueryPlan>,
         context: Context,
+        request_context: Arc<Context>,
         source_stream_value: Option<Value>,
         subscription_tx: Option<mpsc::Sender<SubscriptionTaskParams>>,
     ) -> Request {
@@ -53,6 +56,7 @@ impl Request {
             supergraph_request,
             query_plan,
             context,
+            request_context,
             source_stream_value,
             subscription_tx,
         }
@@ -64,6 +68,7 @@ impl Request {
         supergraph_request: http::Request<graphql::Request>,
         query_plan: Arc<QueryPlan>,
         context: Context,
+        request_context: Arc<Context>,
         source_stream_value: Option<Value>,
         subscription_tx: Option<mpsc::Sender<SubscriptionTaskParams>>,
     ) -> Request {
@@ -71,6 +76,7 @@ impl Request {
             supergraph_request,
             query_plan,
             context,
+            request_context,
             source_stream_value,
             subscription_tx,
         }
@@ -86,6 +92,7 @@ impl Request {
         supergraph_request: Option<http::Request<graphql::Request>>,
         query_plan: Option<QueryPlan>,
         context: Option<Context>,
+        request_context: Option<Context>,
         source_stream_value: Option<Value>,
         subscription_tx: Option<mpsc::Sender<SubscriptionTaskParams>>,
     ) -> Request {
@@ -93,6 +100,7 @@ impl Request {
             supergraph_request.unwrap_or_default(),
             Arc::new(query_plan.unwrap_or_else(|| QueryPlan::fake_builder().build())),
             context.unwrap_or_default(),
+            Arc::new(request_context.unwrap_or_default()),
             source_stream_value,
             subscription_tx,
         )

@@ -99,7 +99,7 @@ where
             let query_plan = req.query_plan.clone();
             let execution_service_cloned = inner.clone();
             let cloned_supergraph_req =
-                clone_supergraph_request(&req.supergraph_request, context.clone());
+                clone_supergraph_request(&req.supergraph_request, context.clone(), req.request_context.clone());
             // Spawn the side-channel task for subscription.
             tokio::spawn(async move {
                 subscription_task(
@@ -304,11 +304,13 @@ async fn dispatch_subscription_event(
             let cloned_supergraph_req = clone_supergraph_request(
                 &supergraph_req.supergraph_request,
                 supergraph_req.context.clone(),
+                supergraph_req.request_context.clone(),
             );
             let execution_request = ExecutionRequest::internal_builder()
                 .supergraph_request(cloned_supergraph_req.supergraph_request)
                 .query_plan(query_plan.clone())
                 .context(context)
+                .request_context(supergraph_req.request_context.clone())
                 .source_stream_value(val.data.take().unwrap_or_default())
                 .build()
                 .await;
@@ -352,11 +354,13 @@ async fn dispatch_subscription_event(
 fn clone_supergraph_request(
     req: &http::Request<graphql::Request>,
     context: Context,
+    request_context: Arc<Context>,
 ) -> SupergraphRequest {
     let mut cloned_supergraph_req = SupergraphRequest::builder()
         .extensions(req.body().extensions.clone())
         .and_query(req.body().query.clone())
         .context(context)
+        .request_context(request_context.clone())
         .method(req.method().clone())
         .and_operation_name(req.body().operation_name.clone())
         .uri(req.uri().clone())

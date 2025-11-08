@@ -1,5 +1,6 @@
 #![allow(missing_docs)] // FIXME
 
+use std::sync::Arc;
 use futures::future::ready;
 use futures::stream::StreamExt;
 use futures::stream::once;
@@ -44,6 +45,9 @@ pub struct Request {
 
     /// Context for extension
     pub context: Context,
+
+    /// Context for request
+    pub request_context: Arc<Context>,
 }
 
 impl From<http::Request<graphql::Request>> for Request {
@@ -51,6 +55,7 @@ impl From<http::Request<graphql::Request>> for Request {
         Self {
             supergraph_request,
             context: Context::new(),
+            request_context: Arc::new(Context::new()),
         }
     }
 }
@@ -60,6 +65,7 @@ impl std::fmt::Debug for Request {
         f.debug_struct("Request")
             // .field("supergraph_request", &self.supergraph_request)
             .field("context", &self.context)
+            .field("request_context", &self.request_context)
             .finish()
     }
 }
@@ -77,6 +83,7 @@ impl Request {
         variables: JsonMap<ByteString, Value>,
         extensions: JsonMap<ByteString, Value>,
         context: Context,
+        request_context: Arc<Context>,
         headers: MultiMap<TryIntoHeaderName, TryIntoHeaderValue>,
         uri: Uri,
         method: Method,
@@ -95,6 +102,7 @@ impl Request {
         Ok(Self {
             supergraph_request,
             context,
+            request_context,
         })
     }
 
@@ -113,6 +121,7 @@ impl Request {
         variables: JsonMap<ByteString, Value>,
         extensions: JsonMap<ByteString, Value>,
         context: Option<Context>,
+        request_context: Option<Arc<Context>>,
         mut headers: MultiMap<TryIntoHeaderName, TryIntoHeaderValue>,
         method: Option<Method>,
     ) -> Result<Request, BoxError> {
@@ -121,6 +130,7 @@ impl Request {
             .entry(http::header::CONTENT_TYPE.into())
             .or_insert(HeaderValue::from_static(APPLICATION_JSON.essence_str()).into());
         let context = context.unwrap_or_default();
+        let request_context = request_context.unwrap_or_default();
 
         Request::new(
             query,
@@ -128,6 +138,7 @@ impl Request {
             variables,
             extensions,
             context,
+            request_context,
             headers,
             Uri::from_static("http://default"),
             method.unwrap_or(Method::POST),
@@ -142,6 +153,7 @@ impl Request {
         // Skip the `Object` type alias in order to use buildstructor’s map special-casing
         extensions: JsonMap<ByteString, Value>,
         context: Option<Context>,
+        request_context: Option<Arc<Context>>,
         headers: MultiMap<TryIntoHeaderName, TryIntoHeaderValue>,
     ) -> Result<Request, BoxError> {
         let default_query = "
@@ -166,6 +178,7 @@ impl Request {
             variables,
             extensions,
             context,
+            request_context,
             headers,
             None,
         )
@@ -465,6 +478,7 @@ mod test {
             .query("query { topProducts }")
             .operation_name("Default")
             .context(Context::new())
+            .request_context(Arc::new(Context::new()))
             // We need to follow up on this. How can users creat this easily?
             .extension("foo", json!({}))
             // We need to follow up on this. How can users creat this easily?

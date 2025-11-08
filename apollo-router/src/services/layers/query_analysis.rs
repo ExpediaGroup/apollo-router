@@ -362,6 +362,7 @@ impl QueryAnalysisLayer {
                 Ok(SupergraphRequest {
                     supergraph_request: request.supergraph_request,
                     context: request.context,
+                    request_context: request.request_context.clone(),
                 })
             }
             Err(MaybeBackPressureError::PermanentError(errors)) => {

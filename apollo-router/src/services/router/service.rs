@@ -423,6 +423,7 @@ impl RouterService {
 
     async fn call_inner(self, req: RouterRequest) -> Result<RouterResponse, BoxError> {
         let context = req.context;
+        let request_context = req.request_context;
         let (parts, body) = req.router_request.into_parts();
         let requests = self
             .clone()
@@ -431,7 +432,7 @@ impl RouterService {
 
         let my_self = self.clone();
         let (supergraph_requests, is_batch) = match futures::future::ready(requests)
-            .and_then(|r| my_self.translate_request(&context, parts, r))
+            .and_then(|r| my_self.translate_request(&context, &request_context, parts, r))
             .await
         {
             Ok(requests) => requests,
@@ -628,6 +629,7 @@ impl RouterService {
     async fn translate_request(
         self,
         context: &Context,
+        request_context: &Arc<Context>,
         parts: Parts,
         graphql_requests: (Vec<graphql::Request>, bool),
     ) -> Result<(Vec<SupergraphRequest>, bool), TranslateError> {
@@ -713,6 +715,7 @@ impl RouterService {
             results.push(SupergraphRequest {
                 supergraph_request: new,
                 context: new_context,
+                request_context: request_context.clone(),
             });
         }
 
@@ -733,6 +736,7 @@ impl RouterService {
             SupergraphRequest {
                 supergraph_request: sg,
                 context: context.clone(),
+                request_context: request_context.clone(),
             },
         );
 

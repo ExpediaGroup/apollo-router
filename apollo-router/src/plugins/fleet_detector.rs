@@ -275,6 +275,7 @@ impl PluginPrivate for FleetDetector {
                     }))
                 }),
                 context: req.context,
+                request_context: req.request_context.clone(),
             })
             // Count the number of response bytes from the router to clients
             .map_response(move |res: router::Response| {

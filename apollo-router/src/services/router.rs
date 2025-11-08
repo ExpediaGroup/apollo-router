@@ -2,7 +2,7 @@
 
 use std::any::Any;
 use std::mem;
-
+use std::sync::Arc;
 use ahash::HashMap;
 use bytes::Bytes;
 use displaydoc::Display;
@@ -63,13 +63,17 @@ pub struct Request {
 
     /// Context for extension
     pub context: Context,
+
+    /// Context for request
+    pub request_context: Arc<Context>,
 }
 
-impl From<(http::Request<Body>, Context)> for Request {
-    fn from((router_request, context): (http::Request<Body>, Context)) -> Self {
+impl From<(http::Request<Body>, Context, Arc<Context>)> for Request {
+    fn from((router_request, context, request_context): (http::Request<Body>, Context, Arc<Context>)) -> Self {
         Self {
             router_request,
             context,
+            request_context: request_context.clone(),
         }
     }
 }
@@ -109,6 +113,7 @@ impl Request {
     #[builder(visibility = "pub")]
     fn new(
         context: Context,
+        request_context: Context,
         headers: MultiMap<TryIntoHeaderName, TryIntoHeaderValue>,
         uri: http::Uri,
         method: Method,
@@ -122,6 +127,7 @@ impl Request {
         Ok(Self {
             router_request,
             context,
+            request_context: Arc::new(request_context),
         })
     }
 
@@ -131,6 +137,7 @@ impl Request {
     #[builder(visibility = "pub")]
     fn fake_new(
         context: Option<Context>,
+        request_context: Option<Context>,
         headers: MultiMap<TryIntoHeaderName, TryIntoHeaderValue>,
         uri: Option<http::Uri>,
         method: Option<Method>,
@@ -144,6 +151,7 @@ impl Request {
         Ok(Self {
             router_request,
             context: context.unwrap_or_default(),
+            request_context: Arc::new(request_context.unwrap_or_default()),
         })
     }
 }
@@ -165,6 +173,7 @@ impl TryFrom<supergraph::Request> for Request {
         let supergraph::Request {
             context,
             supergraph_request,
+            request_context,
             ..
         } = request;
 
@@ -199,6 +208,7 @@ impl TryFrom<supergraph::Request> for Request {
         Ok(Self {
             router_request,
             context,
+            request_context,
         })
     }
 }
@@ -491,10 +501,12 @@ where
 {
     fn from(request: http::Request<T>) -> Self {
         let context: Context = request.extensions().get().cloned().unwrap_or_default();
+        let request_context: Context = Context::new();
 
         Self {
             router_request: request.map(convert_to_body),
             context,
+            request_context: Arc::new(request_context),
         }
     }
 }

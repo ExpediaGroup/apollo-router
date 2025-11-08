@@ -67,6 +67,7 @@ impl Replay {
             .variables(client_request.variables.clone())
             .headers(request_headers)
             .context(Context::default())
+            .request_context(Arc::new(Context::default()))
             .uri(client_request.uri.parse::<Uri>().expect("uri is valid"))
             .method(
                 client_request

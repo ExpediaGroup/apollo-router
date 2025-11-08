@@ -258,7 +258,7 @@ macro_rules! gen_map_router_deferred_request {
                 .checkpoint( move |chunked_request: $base::Request|  {
                     // we split the request stream into headers+first body chunk, then a stream of chunks
                     // for which we will implement mapping later
-                    let $base::Request { router_request, context } = chunked_request;
+                    let $base::Request { router_request, context, request_context } = chunked_request;
                     let (parts, stream) = router_request.into_parts();
 
                     let request = $base::FirstRequest {
@@ -291,6 +291,7 @@ macro_rules! gen_map_router_deferred_request {
                     Ok(ControlFlow::Continue($base::Request {
                         context,
                         router_request: http::Request::from_parts(parts, stream),
+                        request_context: request_context.clone(),
                     }))
 
                     /*TODO: reenable when https://github.com/apollographql/router/issues/3642 is decided

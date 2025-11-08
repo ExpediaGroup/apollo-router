@@ -201,6 +201,7 @@ async fn router_layer(
         return Ok(router::Request::from((
             http::Request::from_parts(request_parts, request_body),
             req.context,
+            req.request_context
         )));
     }
 

@@ -314,6 +314,7 @@ async fn service_call(
                         ExecutionRequest::internal_builder()
                             .supergraph_request(req.supergraph_request)
                             .query_plan(plan.clone())
+                            .request_context(req.request_context.clone())
                             .context(context)
                             .build()
                             .await,

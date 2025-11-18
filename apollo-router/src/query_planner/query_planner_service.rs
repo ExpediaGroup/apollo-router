@@ -458,7 +458,7 @@ impl Service<QueryPlannerRequest> for QueryPlannerService {
             let duration = start.elapsed();
             tracing::info!({
                 message = "Building query plan",
-                operation = format!("{}", operation_name.clone().unwrap_or(Name::new_static_unchecked("NO OPERATION NAME PROVIDED"))),
+                operation = format!("{}", operation_name.clone().unwrap_or(String::from("NO OPERATION NAME PROVIDED"))),
                 duration = %duration.as_millis(),
             });
             f64_histogram!(

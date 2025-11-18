@@ -455,16 +455,16 @@ impl Service<QueryPlannerRequest> for QueryPlannerService {
                 )
                 .await;
 
+            let duration = start.elapsed();
             tracing::info!({
                 message = "Building query plan",
                 operation = format!("{}", operation_name.clone().unwrap_or(Name::new_static_unchecked("NO OPERATION NAME PROVIDED"))),
-                duration = start.elapsed().as_millis(),
+                duration = %duration.as_millis(),
             });
-
             f64_histogram!(
                 "apollo.router.query_planning.total.duration",
                 "Duration of the time the router waited for a query plan, including both the queue time and planning time, in seconds.",
-                start.elapsed().as_secs_f64()
+                duration.as_secs_f64()
             );
 
             match res {

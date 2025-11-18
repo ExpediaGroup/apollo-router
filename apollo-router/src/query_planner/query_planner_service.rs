@@ -459,7 +459,7 @@ impl Service<QueryPlannerRequest> for QueryPlannerService {
             tracing::info!({
                 message = "Building query plan",
                 operation = format!("{}", operation_name.clone().unwrap_or(String::from("NO OPERATION NAME PROVIDED"))),
-                duration = %duration.as_millis(),
+                duration_ms = %duration.as_millis(),
             });
             f64_histogram!(
                 "apollo.router.query_planning.total.duration",

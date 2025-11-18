@@ -171,10 +171,6 @@ impl QueryPlannerService {
                 .map(|n| Name::new(n).map_err(FederationError::from))
                 .transpose()
                 .and_then(|operation| {
-                    tracing::info!({
-                        message = "Building query plan",
-                        operation = format!("{}", operation.clone().unwrap_or(Name::new_static_unchecked("NO OPERATION NAME PROVIDED"))),
-                    });
                     rust_planner.build_query_plan(&doc.executable, operation, query_plan_options)
                 });
             if let Err(FederationError::SingleFederationError(
@@ -464,10 +460,16 @@ impl Service<QueryPlannerRequest> for QueryPlannerService {
                 )
                 .await;
 
+            let duration = start.elapsed();
+            tracing::info!({
+                message = "Building query plan",
+                operation = format!("{}", operation_name.clone().unwrap_or(String::from("NO OPERATION NAME PROVIDED"))),
+                duration_ms = %duration.as_millis(),
+            });
             f64_histogram!(
                 "apollo.router.query_planning.total.duration",
                 "Duration of the time the router waited for a query plan, including both the queue time and planning time, in seconds.",
-                start.elapsed().as_secs_f64()
+                duration.as_secs_f64()
             );
 
             match res {

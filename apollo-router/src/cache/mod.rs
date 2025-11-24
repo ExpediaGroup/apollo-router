@@ -222,6 +222,19 @@ where
         }
     }
 
+    pub(crate) async fn insert_in_memory(self, value: V) {
+        if let EntryInner::First {
+            key,
+            sender,
+            cache,
+            ..
+        } = self.inner
+        {
+            cache.insert_in_memory(key.clone(), value.clone()).await;
+            cache.send(sender, &key, Ok(value)).await;
+        }
+    }
+
     /// sends the value without storing it into the cache
     #[allow(unused)]
     pub(crate) async fn send(self, value: Result<V, UncachedError>) {

@@ -32,7 +32,6 @@ use fred::types::config::UnresponsiveConfig;
 use fred::types::scan::ScanResult;
 use futures::Stream;
 use futures::future::join_all;
-use opentelemetry_sdk::trace::config;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::task::AbortHandle;
 use tower::BoxError;

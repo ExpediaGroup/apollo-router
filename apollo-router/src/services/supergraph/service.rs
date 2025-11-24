@@ -153,7 +153,7 @@ async fn service_call(
     let body = req.supergraph_request.body();
     let variables = body.variables.clone();
 
-    let QueryPlannerResponse { content, errors, .. } = match plan_query(
+    let QueryPlannerResponse { content, errors } = match plan_query(
         planning,
         body.operation_name.clone(),
         context.clone(),
@@ -226,7 +226,7 @@ async fn service_call(
             Ok(response)
         }
 
-        Some(QueryPlannerContent::Plan { plan, .. }) => {
+        Some(QueryPlannerContent::Plan { plan }) => {
             let query_metrics = plan.query_metrics;
             context.extensions().with_lock(|lock| {
                 let _ = lock.insert::<OperationLimits<u32>>(query_metrics);

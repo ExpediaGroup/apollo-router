@@ -1053,6 +1053,11 @@ pub(crate) struct QueryPlanRedisCache {
     #[serde(default = "default_query_planner_cache_pool_size")]
     /// The size of the Redis connection pool
     pub(crate) pool_size: u32,
+
+    /// Only cache a query plan if its compute time exceeded this duration, if `None`, it will cache all query plans (current behavior).
+    #[serde(deserialize_with = "humantime_serde::deserialize", default)]
+    #[schemars(with = "Option<String>", default)]
+    pub(crate) min_compute_duration_to_cache: Option<Duration>,
 }
 
 fn default_query_plan_cache_ttl() -> Duration {
@@ -1142,6 +1147,12 @@ pub(crate) struct RedisCache {
     #[serde(default = "default_pool_size")]
     /// The size of the Redis connection pool
     pub(crate) pool_size: u32,
+
+    /// Only cache a value if its compute time exceeded this duration, if `None`, it will cache all values (current behavior).
+    #[serde(deserialize_with = "humantime_serde::deserialize", default)]
+    #[schemars(with = "Option<String>", default)]
+    pub(crate) min_compute_duration_to_cache: Option<Duration>,
+
     #[serde(
         deserialize_with = "humantime_serde::deserialize",
         default = "default_metrics_interval"
@@ -1180,6 +1191,7 @@ impl From<QueryPlanRedisCache> for RedisCache {
             required_to_start: value.required_to_start,
             reset_ttl: value.reset_ttl,
             pool_size: value.pool_size,
+            min_compute_duration_to_cache: value.min_compute_duration_to_cache,
             metrics_interval: default_metrics_interval(),
         }
     }

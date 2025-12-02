@@ -120,6 +120,7 @@ impl From<&Config> for RedisCache {
             reset_ttl: false,
             pool_size: value.pool_size,
             metrics_interval: value.metrics_interval,
+            min_compute_duration_to_cache: None
         }
     }
 }

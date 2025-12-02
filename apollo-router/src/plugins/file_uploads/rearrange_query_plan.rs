@@ -46,6 +46,7 @@ pub(super) fn rearrange_query_plan(
         query: query_plan.query.clone(),
         query_metrics: query_plan.query_metrics,
         estimated_size: Default::default(),
+        compute_duration: query_plan.compute_duration,
     })
 }
 

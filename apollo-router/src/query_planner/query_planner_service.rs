@@ -207,6 +207,7 @@ impl QueryPlannerService {
         }
 
         Ok(QueryPlanResult {
+            // tempted to get rid of this, it might cause CPU usage to go up for no good reason
             formatted_query_plan: Some(Arc::new(plan.to_string())),
             query_plan_root_node: root_node.map(Arc::new),
             evaluated_plan_count: plan.statistics.evaluated_plan_count.clone().into_inner() as u64,
@@ -315,6 +316,7 @@ impl QueryPlannerService {
         compute_job_type: ComputeJobType,
         query_metrics: OperationLimits<u32>,
     ) -> Result<QueryPlannerContent, MaybeBackPressureError<QueryPlannerError>> {
+        let start = Instant::now();
         let plan_result = self
             .plan_inner(
                 doc,
@@ -357,6 +359,8 @@ impl QueryPlannerService {
             &self.signature_normalization_algorithm,
         );
 
+        let elapsed = start.elapsed();
+
         if let Some(node) = query_plan_root_node {
             u64_histogram!(
                 "apollo.router.query_planning.plan.evaluated_plans",
@@ -377,6 +381,7 @@ impl QueryPlannerService {
                     query: Arc::new(selections),
                     query_metrics,
                     estimated_size: Default::default(),
+                    compute_duration: Some(elapsed),
                 }),
             })
         } else {

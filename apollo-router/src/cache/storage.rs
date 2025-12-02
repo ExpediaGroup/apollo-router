@@ -5,6 +5,7 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::sync::atomic::AtomicI64;
 use std::sync::atomic::Ordering;
+use std::time::Duration;
 
 use lru::LruCache;
 use opentelemetry::KeyValue;
@@ -30,6 +31,11 @@ pub(crate) trait ValueType:
 {
     /// Returns an estimated size of the cache entry in bytes.
     fn estimated_size(&self) -> Option<usize> {
+        None
+    }
+
+    /// Returns the time that the value took to compute.
+    fn compute_duration(&self) -> Option<Duration> {
         None
     }
 }
@@ -235,9 +241,11 @@ where
 
     pub(crate) async fn insert(&self, key: K, value: V) {
         if let Some(redis) = self.redis.as_ref() {
-            redis
-                .insert(RedisKey(key.clone()), RedisValue(value.clone()), None)
-                .await;
+            if redis.can_insert(&value) {
+                redis
+                  .insert(RedisKey(key.clone()), RedisValue(value.clone()), None)
+                  .await;
+            }
         }
 
         self.insert_in_memory(key, value).await;

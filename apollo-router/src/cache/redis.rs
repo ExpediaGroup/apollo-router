@@ -162,6 +162,7 @@ pub(crate) struct RedisCacheStorage {
     pub(crate) ttl: Option<Duration>,
     is_cluster: bool,
     reset_ttl: bool,
+    min_compute_duration_to_cache: Option<Duration>,
 }
 
 fn get_type_of<T>(_: &T) -> &'static str {
@@ -287,6 +288,7 @@ impl RedisCacheStorage {
             caller,
             config.metrics_interval,
             config.required_to_start,
+            config.min_compute_duration_to_cache,
         )
         .await
     }
@@ -305,6 +307,7 @@ impl RedisCacheStorage {
             reset_ttl: false,
             pool_size: 1,
             metrics_interval: Duration::from_millis(100),
+            min_compute_duration_to_cache: Some(Duration::from_secs(3)),
         };
 
         Self::from_mocks_and_config(mocks, config, "test", false).await
@@ -333,6 +336,7 @@ impl RedisCacheStorage {
             caller,
             config.metrics_interval,
             true,
+            config.min_compute_duration_to_cache,
         )
         .await
     }
@@ -349,6 +353,7 @@ impl RedisCacheStorage {
         caller: &'static str,
         metrics_interval: Duration,
         required_to_start: bool,
+        min_compute_duration_to_cache: Option<Duration>,
     ) -> Result<Self, BoxError> {
         let pooled_client = Builder::from_config(client_config)
             .with_config(|client_config| {
@@ -492,6 +497,7 @@ impl RedisCacheStorage {
             ttl,
             is_cluster,
             reset_ttl,
+            min_compute_duration_to_cache,
         })
     }
 
@@ -712,6 +718,23 @@ impl RedisCacheStorage {
                 .map(|v| v.ok_or(RedisError::new(RedisErrorKind::NotFound, "")))
                 .collect())
         }
+    }
+
+    pub(crate) fn can_insert<V: ValueType>(&self, value: &V) -> bool {
+        if let (Some(min_compute_duration_to_cache), Some(compute_duration)) =
+            (self.min_compute_duration_to_cache, value.compute_duration()) {
+            let can_insert = compute_duration >= min_compute_duration_to_cache;
+            if !can_insert {
+                tracing::trace!(
+                    "skipping redis cache insert for value {:?} because compute duration {:?} is below minimum {:?}",
+                    value,
+                    compute_duration,
+                    min_compute_duration_to_cache
+                );
+            }
+            return can_insert;
+        }
+        true
     }
 
     pub(crate) async fn insert<K: KeyType, V: ValueType>(

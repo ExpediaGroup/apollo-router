@@ -5,7 +5,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU8;
 use std::sync::atomic::Ordering;
 use std::task;
-
+use std::time::Duration;
 use futures::future::BoxFuture;
 use indexmap::IndexMap;
 use query_planner::QueryPlannerPlugin;
@@ -133,7 +133,7 @@ fn init_query_plan_from_redis(
     subgraph_schemas: &SubgraphSchemas,
     cache_entry: &mut Result<QueryPlannerContent, Arc<QueryPlannerError>>,
 ) -> Result<(), String> {
-    if let Ok(QueryPlannerContent::Plan { plan }) = cache_entry {
+    if let Ok(QueryPlannerContent::Plan { plan, .. }) = cache_entry {
         // Arc freshly deserialized from Redis should be unique, so this doesn't clone:
         let plan = Arc::make_mut(plan);
         let root = Arc::make_mut(&mut plan.root);
@@ -936,6 +936,13 @@ impl ValueType for Result<QueryPlannerContent, Arc<QueryPlannerError>> {
             }
             Ok(QueryPlannerContent::IntrospectionDisabled) => None,
             Err(e) => Some(estimate_size(e)),
+        }
+    }
+
+    fn compute_duration(&self) -> Option<Duration> {
+        match self {
+            Ok(QueryPlannerContent::Plan { plan, .. }) => plan.compute_duration.clone(),
+            _ => None,
         }
     }
 }
@@ -1974,9 +1981,10 @@ mod tests {
                     query: Arc::new(Query::empty_for_tests()),
                     query_metrics: Default::default(),
                     estimated_size: Default::default(),
+                    compute_duration: Default::default(),
                 };
                 let qp_content = QueryPlannerContent::Plan {
-                    plan: Arc::new(query_plan),
+                    plan: Arc::new(query_plan)
                 };
 
                 Ok(QueryPlannerResponse::builder().content(qp_content).build())

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-
+use std::time::Duration;
 use apollo_compiler::collections::HashSet;
 use apollo_compiler::validation::Valid;
 use serde::Deserialize;
@@ -50,6 +50,10 @@ pub struct QueryPlan {
     /// The estimated size in bytes of the query plan
     #[serde(default)]
     pub(crate) estimated_size: Arc<AtomicUsize>,
+
+    /// The duration taken to compute the query plan
+    #[serde(default)]
+    pub(crate) compute_duration: Option<Duration>
 }
 
 /// This default impl is useful for test users
@@ -70,6 +74,7 @@ impl QueryPlan {
             query: Arc::new(Query::empty_for_tests()),
             query_metrics: Default::default(),
             estimated_size: Default::default(),
+            compute_duration: Default::default(),
         }
     }
 }

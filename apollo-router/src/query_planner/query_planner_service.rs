@@ -208,7 +208,7 @@ impl QueryPlannerService {
 
         Ok(QueryPlanResult {
             // tempted to get rid of this, it might cause CPU usage to go up for no good reason
-            formatted_query_plan: Some(Arc::new(plan.to_string())),
+            formatted_query_plan: None,
             query_plan_root_node: root_node.map(Arc::new),
             evaluated_plan_count: plan.statistics.evaluated_plan_count.clone().into_inner() as u64,
             evaluated_plan_paths: plan.statistics.evaluated_plan_paths.clone().into_inner() as u64,
@@ -446,12 +446,13 @@ impl Service<QueryPlannerRequest> for QueryPlannerService {
                     .map_err(QueryPlannerError::from)?;
                 }
             }
-
+            
+            let original_query_clone = original_query.clone();
             let res = this
                 .get(
                     QueryKey {
                         original_query,
-                        filtered_query: doc.ast.to_string(),
+                        filtered_query: original_query_clone,
                         operation_name: operation_name.to_owned(),
                         metadata,
                         plan_options,

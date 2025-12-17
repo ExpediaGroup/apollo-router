@@ -47,7 +47,7 @@ use crate::plugins::telemetry::reload::builder::Builder;
 pub(crate) mod activation;
 pub(crate) mod builder;
 pub(crate) mod metrics;
-pub(crate) mod otel;
+pub mod otel;
 pub(crate) mod rate_limit;
 pub(crate) mod tracing;
 

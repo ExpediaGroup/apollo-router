@@ -146,7 +146,7 @@ pub(crate) fn apollo_opentelemetry_initialized() -> bool {
 // In that case we still need to propagate headers to subgraphs to tell them they should not sample the trace.
 // To that end, we update the context just for that request to create valid span et trace ids, with the
 // sampling bit set to false
-pub(crate) fn prepare_context(context: Context) -> Context {
+pub fn prepare_context(context: Context) -> Context {
     if !context.span().span_context().is_valid()
         && let Some(tracer) = OPENTELEMETRY_TRACER_HANDLE.get()
     {

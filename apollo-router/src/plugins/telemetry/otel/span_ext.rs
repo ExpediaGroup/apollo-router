@@ -9,7 +9,7 @@ use super::layer::WithContext;
 /// [`Span`]: tracing::Span
 /// [OpenTelemetry]: https://opentelemetry.io
 /// [`Context`]: opentelemetry::Context
-pub(crate) trait OpenTelemetrySpanExt {
+pub trait OpenTelemetrySpanExt {
     /// Associates `self` with a given OpenTelemetry trace, using the provided
     /// followed span [`SpanContext`].
     ///

@@ -209,6 +209,7 @@ async fn mock_subgraph_service_with_panics_should_be_reported_as_service_closed(
         query_metrics: Default::default(),
         usage_reporting: UsageReporting::Error("this is a test report key".to_string()).into(),
         estimated_size: Default::default(),
+        compute_duration: None
     };
 
     let mut mock_products_service = plugin::test::MockSubgraphService::new();
@@ -266,6 +267,7 @@ async fn fetch_includes_operation_name() {
         query: Arc::new(Query::empty_for_tests()),
         query_metrics: Default::default(),
         estimated_size: Default::default(),
+        compute_duration: None
     };
 
     let succeeded: Arc<AtomicBool> = Default::default();
@@ -332,6 +334,7 @@ async fn fetch_makes_post_requests() {
         query: Arc::new(Query::empty_for_tests()),
         query_metrics: Default::default(),
         estimated_size: Default::default(),
+        compute_duration: None,
     };
 
     let succeeded: Arc<AtomicBool> = Default::default();
@@ -467,6 +470,7 @@ async fn defer() {
             query: Arc::new(Query::empty_for_tests()),
             query_metrics: Default::default(),
             estimated_size: Default::default(),
+            compute_duration: None
         };
 
     let mut mock_x_service = plugin::test::MockSubgraphService::new();
@@ -605,6 +609,7 @@ async fn defer_if_condition() {
         formatted_query_plan: None,
         query_metrics: Default::default(),
         estimated_size: Default::default(),
+        compute_duration: None
     };
 
     let mocked_accounts = MockSubgraph::builder()
@@ -763,6 +768,7 @@ async fn dependent_mutations() {
         query: Arc::new(Query::empty_for_tests()),
         query_metrics: Default::default(),
         estimated_size: Default::default(),
+        compute_duration: None
     };
 
     let mut mock_a_service = plugin::test::MockSubgraphService::new();
@@ -1986,6 +1992,7 @@ fn broken_plan_does_not_panic() {
         query: Arc::new(Query::empty_for_tests()),
         query_metrics: Default::default(),
         estimated_size: Default::default(),
+        compute_duration: None
     };
     let subgraph_schema = apollo_compiler::Schema::parse_and_validate(subgraph_schema, "").unwrap();
     let mut subgraph_schemas = HashMap::default();

@@ -159,11 +159,11 @@ pub(crate) mod formatters;
 mod logging;
 pub(crate) mod metrics;
 /// Opentelemetry utils
-pub(crate) mod otel;
+pub mod otel;
 mod otlp;
-pub(crate) mod reload;
+pub mod reload;
 pub(crate) mod resource;
-pub(crate) mod span_ext;
+pub mod span_ext;
 mod span_factory;
 pub(crate) mod tracing;
 pub(crate) mod utils;

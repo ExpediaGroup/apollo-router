@@ -68,7 +68,7 @@ mod introspection;
 pub mod layers;
 pub(crate) mod logging;
 mod orbiter;
-mod plugins;
+pub mod plugins;
 pub(crate) mod protocols;
 mod query_planner;
 mod router;

@@ -160,7 +160,7 @@ pub(crate) mod metrics;
 /// Opentelemetry utils
 pub mod otel;
 mod otlp;
-pub(crate) mod reload;
+pub mod reload;
 pub(crate) mod resource;
 pub mod span_ext;
 mod span_factory;

@@ -47,7 +47,7 @@ use crate::plugins::telemetry::reload::builder::Builder;
 pub(crate) mod activation;
 pub(crate) mod builder;
 pub(crate) mod metrics;
-pub(crate) mod otel;
+pub mod otel;
 pub(crate) mod tracing;
 
 /// Prepares telemetry components for activation (Phase 1 of reload lifecycle).

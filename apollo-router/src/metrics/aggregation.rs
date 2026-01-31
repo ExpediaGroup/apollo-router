@@ -199,10 +199,18 @@ impl AggregateMeterProvider {
         Arc<T>: Into<InstrumentWrapper>,
     {
         let mut guard = self.inner.lock();
-        let inner = guard
-            .as_mut()
-            .expect("cannot use meter provider after shutdown");
-        inner.create_registered_instrument(create_fn)
+        match guard.as_mut() {
+            Some(inner) => inner.create_registered_instrument(create_fn),
+            None => {
+                // The meter provider was used after shutdown. Create using a default Inner
+                // which will produce noop instruments that don't export anywhere.
+                // This prevents panic during graceful shutdown when exporters may still
+                // be recording final metrics.
+                tracing::debug!("Attempted to create registered instrument after meter provider shutdown, returning noop instrument");
+                let mut noop_inner = Inner::default();
+                Arc::new((create_fn)(&mut noop_inner))
+            }
+        }
     }
 
     #[cfg(test)]
@@ -210,9 +218,8 @@ impl AggregateMeterProvider {
         self.inner
             .lock()
             .as_ref()
-            .expect("cannot use meter provider after shutdown")
-            .registered_instruments
-            .len()
+            .map(|inner| inner.registered_instruments.len())
+            .unwrap_or(0)
     }
 }
 
@@ -569,6 +576,7 @@ mod test {
 
     use async_trait::async_trait;
     use opentelemetry::global::GlobalMeterProvider;
+    use opentelemetry::metrics::Counter;
     use opentelemetry::metrics::MeterProvider;
     use opentelemetry::metrics::Result;
     use opentelemetry_sdk::metrics::Aggregation;
@@ -868,6 +876,26 @@ mod test {
 
         tokio::time::sleep(Duration::from_millis(20)).await;
         assert!(shutdown.load(std::sync::atomic::Ordering::SeqCst));
+    }
+
+    #[test]
+    fn test_create_registered_instrument_after_shutdown_does_not_panic() {
+        // Ensure that calling create_registered_instrument after shutdown returns a noop
+        // instrument instead of panicking. This can happen when exporters try to record
+        // final metrics during graceful shutdown.
+        let meter_provider = AggregateMeterProvider::default();
+        meter_provider.shutdown();
+
+        // This should not panic - it should return a noop instrument
+        let counter: Arc<Counter<u64>> = meter_provider.create_registered_instrument(|inner| {
+            inner.meter("test").u64_counter("test.counter").init()
+        });
+
+        // The counter should still be usable (as a noop)
+        counter.add(1, &[]);
+
+        // registered_instruments should return 0 after shutdown
+        assert_eq!(meter_provider.registered_instruments(), 0);
     }
 
     #[tokio::test(flavor = "multi_thread")]

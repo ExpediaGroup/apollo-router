@@ -111,7 +111,7 @@ impl Response {
         Response::from_value(value)
     }
 
-    pub(crate) fn from_value(value: Value) -> Result<Response, MalformedResponseError> {
+    pub fn from_value(value: Value) -> Result<Response, MalformedResponseError> {
         let mut object = ensure_object!(value).map_err(|error| MalformedResponseError {
             reason: error.to_string(),
         })?;

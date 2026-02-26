@@ -17,9 +17,9 @@ use crate::json_ext::Value;
 
 #[derive(thiserror::Error, Display, Debug, Eq, PartialEq)]
 #[error("GraphQL response was malformed: {reason}")]
-pub(crate) struct MalformedResponseError {
+pub struct MalformedResponseError {
     /// The reason the deserialization failed.
-    pub(crate) reason: String,
+    pub reason: String,
 }
 
 /// A graphql primary response.
@@ -126,7 +126,7 @@ impl Response {
         Response::from_value(value)
     }
 
-    pub(crate) fn from_value(value: Value) -> Result<Response, MalformedResponseError> {
+    pub fn from_value(value: Value) -> Result<Response, MalformedResponseError> {
         let mut object = ensure_object!(value).map_err(|error| MalformedResponseError {
             reason: error.to_string(),
         })?;

@@ -158,7 +158,7 @@ impl Error {
         }
     }
 
-    pub(crate) fn from_value(value: Value) -> Result<Error, MalformedResponseError> {
+    pub fn from_value(value: Value) -> Result<Error, MalformedResponseError> {
         let mut object = ensure_object!(value).map_err(|error| MalformedResponseError {
             reason: format!("invalid error within `errors`: {error}"),
         })?;
